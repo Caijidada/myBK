@@ -1,11 +1,12 @@
 <template>
+
   <div class="min-h-screen bg-gray-50">
-    <!-- Hero Section with Background Image -->
+    
     <section
       class="relative h-[500px] overflow-hidden flex items-center justify-start pl-20"
       style="background-image: url('https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1920&q=80'); background-size: cover; background-position: center;"
     >
-      <div class="absolute inset-0 bg-black bg-opacity-40"></div>
+      <div class="absolute inset-0 bg-black opacity-50 "></div>
       <div class="relative max-w-lg z-10 text-white">
         <h2 class="text-5xl font-bold mb-4 animate-fade-in">探索知识的无限可能</h2>
         <p class="mb-6 text-lg opacity-90">
@@ -179,8 +180,11 @@ import ArticleCard from '@/components/common/ArticleCard.vue'
 import CategoryCard from '@/components/common/CategoryCard.vue'
 import TagCloud from '@/components/common/TagCloud.vue'
 import dayjs from 'dayjs'
+import AppHeader from '@/components/layout/AppHeader.vue'
 import 'swiper/css'
 import 'swiper/css/pagination'
+
+import 'swiper/swiper-bundle.css'
 
 const router = useRouter()
 const swiperModules = [Pagination, Autoplay]

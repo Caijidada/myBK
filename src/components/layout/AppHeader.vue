@@ -34,7 +34,7 @@
       <div v-if="isLoggedIn" class="relative group">
         <div class="flex items-center space-x-2 cursor-pointer">
           <img 
-            :src="userInfo.avatar || 'https://via.placeholder.com/32'" 
+            :src="userInfo.avatar || 'https://placehold.co/32x32'" 
             alt="avatar"
             class="w-8 h-8 rounded-full"
           />
@@ -146,5 +146,5 @@ const handleLogout = () => {
 </script>
 
 <style scoped>
-/* 自定义样式 */
+
 </style>
