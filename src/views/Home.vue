@@ -2,6 +2,7 @@
 
   <div class="min-h-screen bg-gray-50">
     
+    
     <section
       class="relative h-[500px] overflow-hidden flex items-center justify-start pl-20"
       style="background-image: url('https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1920&q=80'); background-size: cover; background-position: center;"
@@ -22,7 +23,7 @@
     </section>
 
     <!-- Featured Articles Carousel -->
-    <!-- <section class="py-12 px-8 max-w-7xl mx-auto">
+    <section class="py-12 px-8 max-w-7xl mx-auto">
       <h2 class="text-3xl font-bold mb-6 text-center text-gray-800">精选推荐</h2>
       <Swiper
         :modules="swiperModules"
@@ -52,7 +53,7 @@
           </div>
         </SwiperSlide>
       </Swiper>
-    </section> -->
+    </section>
 
     <!-- Category Navigation -->
     <section class="py-10 px-8 bg-white">

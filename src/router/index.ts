@@ -42,6 +42,12 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/About.vue'),
     meta: { title: '关于' }
   },
+  {
+  path: '/archives',
+  name: 'Archives',
+  component: () => import('@/views/Archives.vue'),
+  meta: { title: '归档' }
+},
 
   // ==================== 认证路由 ====================
   {

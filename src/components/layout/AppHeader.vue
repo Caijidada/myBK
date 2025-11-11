@@ -1,100 +1,156 @@
 <template>
-  <header class="bg-white shadow-md py-4 px-8 flex items-center justify-between sticky top-0 z-50">
-    <div class="flex items-center space-x-10">
-      <h1 class="text-xl font-bold text-blue-600 cursor-pointer" @click="router.push('/')">
-        我的博客
-      </h1>
-      <nav class="hidden md:flex space-x-6">
-        <a 
-          v-for="item in navItems" 
-          :key="item.path"
-          :href="item.path" 
-          class="hover:text-blue-500 transition-colors"
-          :class="{ 'text-blue-500 font-medium': isActive(item.path) }"
-        >
-          {{ item.label }}
-        </a>
-      </nav>
-    </div>
-    
-    <div class="flex items-center space-x-4">
-      <!-- 搜索框 -->
-      <div class="relative hidden sm:block">
-        <input
-          v-model="searchKeyword"
-          type="text"
-          placeholder="搜索文章..."
-          @keyup.enter="handleSearch"
-          class="pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-300 w-64 text-sm"
-        />
-        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
-      </div>
-
-      <!-- 用户菜单 -->
-      <div v-if="isLoggedIn" class="relative group">
-        <div class="flex items-center space-x-2 cursor-pointer">
-          <img 
-            :src="userInfo.avatar || 'https://placehold.co/32x32'" 
-            alt="avatar"
-            class="w-8 h-8 rounded-full"
-          />
-          <span class="hidden md:inline text-sm">{{ userInfo.nickname }}</span>
+  <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Logo 和导航 -->
+        <div class="flex items-center space-x-8">
+          <h1 
+            class="text-2xl font-bold text-blue-600 cursor-pointer hover:text-blue-700 transition-colors" 
+            @click="router.push('/')"
+          >
+            bond博客
+          </h1>
+          
+          <!-- 桌面端导航 -->
+          <nav class="hidden md:flex items-center space-x-6">
+            <router-link
+              v-for="item in navItems" 
+              :key="item.path"
+              :to="item.path" 
+              class="px-4 py-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-all"
+              active-class="text-blue-600 bg-blue-50 font-medium"
+            >
+              {{ item.label }}
+            </router-link>
+          </nav>
         </div>
         
-        <!-- 下拉菜单 -->
-        <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-          <router-link to="/user/profile" class="block px-4 py-2 text-sm hover:bg-gray-100">
-            <i class="fas fa-user mr-2"></i>个人中心
-          </router-link>
-          <router-link to="/user/articles" class="block px-4 py-2 text-sm hover:bg-gray-100">
-            <i class="fas fa-file-alt mr-2"></i>我的文章
-          </router-link>
-          <router-link to="/editor" class="block px-4 py-2 text-sm hover:bg-gray-100">
-            <i class="fas fa-edit mr-2"></i>写文章
-          </router-link>
-          <router-link v-if="isAdmin" to="/admin/dashboard" class="block px-4 py-2 text-sm hover:bg-gray-100">
-            <i class="fas fa-cog mr-2"></i>后台管理
-          </router-link>
-          <hr class="my-2" />
-          <a @click="handleLogout" class="block px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer">
-            <i class="fas fa-sign-out-alt mr-2"></i>退出登录
-          </a>
+        <!-- 右侧操作区 -->
+        <div class="flex items-center space-x-4">
+          <!-- 搜索框 -->
+          <div class="relative hidden lg:block">
+            <input
+              v-model="searchKeyword"
+              type="text"
+              placeholder="搜索文章..."
+              @keyup.enter="handleSearch"
+              class="w-64 pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all"
+            />
+            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+          </div>
+
+          <!-- 移动端搜索按钮 -->
+          <button class="lg:hidden p-2 text-gray-600 hover:text-blue-600">
+            <i class="fas fa-search"></i>
+          </button>
+
+          <!-- 用户菜单 -->
+          <div v-if="isLoggedIn" class="relative">
+            <div 
+              class="flex items-center space-x-2 cursor-pointer p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              @click="userMenuOpen = !userMenuOpen"
+            >
+              <img 
+                :src="userInfo?.avatar || 'https://i.pravatar.cc/150?img=1'" 
+                alt="avatar"
+                class="w-8 h-8 rounded-full ring-2 ring-gray-200"
+              />
+              <span class="hidden md:inline text-sm font-medium">{{ userInfo?.nickname || '用户' }}</span>
+              <i class="fas fa-chevron-down text-xs text-gray-400"></i>
+            </div>
+            
+            <!-- 下拉菜单 -->
+            <div 
+              v-if="userMenuOpen"
+              class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
+            >
+              <router-link 
+                to="/user/profile" 
+                class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+              >
+                <i class="fas fa-user w-5 text-gray-400"></i>
+                <span class="ml-3">个人中心</span>
+              </router-link>
+              <router-link 
+                to="/user/articles" 
+                class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+              >
+                <i class="fas fa-file-alt w-5 text-gray-400"></i>
+                <span class="ml-3">我的文章</span>
+              </router-link>
+              <router-link 
+                to="/editor" 
+                class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+              >
+                <i class="fas fa-edit w-5 text-gray-400"></i>
+                <span class="ml-3">写文章</span>
+              </router-link>
+              <router-link 
+                v-if="isAdmin" 
+                to="/admin/dashboard" 
+                class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+              >
+                <i class="fas fa-cog w-5 text-gray-400"></i>
+                <span class="ml-3">后台管理</span>
+              </router-link>
+              <hr class="my-2 border-gray-200" />
+              <button
+                @click="handleLogout" 
+                class="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+              >
+                <i class="fas fa-sign-out-alt w-5"></i>
+                <span class="ml-3">退出登录</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 登录按钮 -->
+          <button 
+            v-else
+            @click="router.push('/login')"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full text-sm font-medium transition-colors shadow-sm hover:shadow-md"
+          >
+            登录
+          </button>
+
+          <!-- 移动端菜单按钮 -->
+          <button 
+            @click="mobileMenuOpen = !mobileMenuOpen"
+            class="md:hidden p-2 text-gray-600 hover:text-blue-600"
+          >
+            <i class="fas text-xl" :class="mobileMenuOpen ? 'fa-times' : 'fa-bars'"></i>
+          </button>
         </div>
       </div>
-
-      <!-- 登录按钮 -->
-      <button 
-        v-else
-        @click="router.push('/login')"
-        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-full text-sm transition-colors"
-      >
-        登录 / 注册
-      </button>
-
-      <!-- 移动端菜单按钮 -->
-      <button 
-        @click="mobileMenuOpen = !mobileMenuOpen"
-        class="md:hidden text-gray-600"
-      >
-        <i class="fas" :class="mobileMenuOpen ? 'fa-times' : 'fa-bars'"></i>
-      </button>
     </div>
 
     <!-- 移动端菜单 -->
     <div 
       v-if="mobileMenuOpen"
-      class="absolute top-full left-0 right-0 bg-white shadow-lg py-4 md:hidden"
+      class="md:hidden border-t border-gray-200 bg-white"
     >
-      <nav class="flex flex-col space-y-2 px-4">
-        <a 
+      <nav class="px-4 py-4 space-y-1">
+        <router-link
           v-for="item in navItems" 
           :key="item.path"
-          :href="item.path" 
-          class="py-2 hover:text-blue-500 transition-colors"
+          :to="item.path" 
+          class="block px-4 py-3 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+          @click="mobileMenuOpen = false"
         >
           {{ item.label }}
-        </a>
+        </router-link>
       </nav>
+      
+      <!-- 移动端搜索 -->
+      <div class="px-4 pb-4">
+        <input
+          v-model="searchKeyword"
+          type="text"
+          placeholder="搜索文章..."
+          @keyup.enter="handleSearch"
+          class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+        />
+      </div>
     </div>
   </header>
 </template>
@@ -108,7 +164,6 @@ const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 
-// 导航项
 const navItems = [
   { label: '首页', path: '/' },
   { label: '文章', path: '/articles' },
@@ -117,34 +172,24 @@ const navItems = [
   { label: '关于', path: '/about' }
 ]
 
-// 状态
 const searchKeyword = ref('')
 const mobileMenuOpen = ref(false)
+const userMenuOpen = ref(false)
 
-// 计算属性
 const isLoggedIn = computed(() => authStore.isLoggedIn)
 const userInfo = computed(() => authStore.user)
 const isAdmin = computed(() => authStore.user?.role === 'ADMIN')
 
-// 判断当前路由是否激活
-const isActive = (path: string) => {
-  return route.path === path
-}
-
-// 搜索
 const handleSearch = () => {
   if (searchKeyword.value.trim()) {
     router.push(`/articles?keyword=${searchKeyword.value}`)
+    mobileMenuOpen.value = false
   }
 }
 
-// 退出登录
 const handleLogout = () => {
   authStore.logout()
+  userMenuOpen.value = false
   router.push('/')
 }
 </script>
-
-<style scoped>
-
-</style>

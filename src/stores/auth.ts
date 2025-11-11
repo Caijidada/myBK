@@ -11,6 +11,7 @@ export const useAuthStore = defineStore('auth', () => {
   // 计算属性
   const isLoggedIn = computed(() => !!token.value)
   const isAdmin = computed(() => user.value?.role === 'ADMIN')
+  
   // ✅ 开发模式下自动登录管理员
   if (import.meta.env.MODE === 'development' && !token.value) {
     token.value = 'dev-admin-token'
