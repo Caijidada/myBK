@@ -34,9 +34,9 @@
             :placeholder="'搜索文章...'"
             @search="handleSearch"
           />
-
+          <div class="flex-1"></div>
           <!-- 排序和筛选 -->
-          <div class="flex items-center space-x-3">
+          <div class="flex items-center space-x-3 flex-1">
             <!-- 排序 -->
             <el-select v-model="sortBy" placeholder="排序方式" class="w-40">
               <el-option label="最新发布" value="time" />
@@ -78,7 +78,7 @@
             </el-select>
 
             <!-- 视图切换 -->
-            <div class="flex border border-gray-300 rounded-lg overflow-hidden">
+            <div class="flex border border-gray-300 rounded-lg overflow-hidden w-77">
               <button
                 @click="viewMode = 'grid'"
                 :class="[
