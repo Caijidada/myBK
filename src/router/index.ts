@@ -146,12 +146,12 @@ const routes: RouteRecordRaw[] = [
   },
 
   // ==================== 404 页面 ====================
-  // {
-  //   path: '/:pathMatch(.*)*',
-  //   name: 'NotFound',
-  //   component: () => import('@/views/NotFound.vue'),
-  //   meta: { title: '404' }
-  // }
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: () => import('@/views/NotFound.vue'),
+    meta: { title: '404' }
+  }
 ]
 
 // 创建路由实例
