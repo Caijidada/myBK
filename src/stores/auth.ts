@@ -4,46 +4,50 @@ import { login as loginAPI, getUserInfo } from '@/api/user'
 import type { User, LoginForm } from '@/types'
 
 export const useAuthStore = defineStore('auth', () => {
-  // 状态
-  const token = ref<string>(localStorage.getItem('token') || '')
-  const user = ref<User | null>(null)
+  // 状态 - 使用 accessToken 和 refreshToken
+  const accessToken = ref<string>(localStorage.getItem('accessToken') || '')
+  const refreshToken = ref<string>(localStorage.getItem('refreshToken') || '')
+  const user = ref<User | null>(
+    localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null
+  )
 
   // 计算属性
-  const isLoggedIn = computed(() => !!token.value)
+  const isLoggedIn = computed(() => !!accessToken.value && !!user.value)
   const isAdmin = computed(() => user.value?.role === 'ADMIN')
   
-  // // ✅ 开发模式下自动登录管理员
-  // if (import.meta.env.MODE === 'development' && !token.value) {
-  //   token.value = 'dev-admin-token'
-  //   user.value = {
-  //     id: 1,
-  //     username: 'Admin',
-  //     role: 'ADMIN',
-  //     email: 'admin@example.com'
-  //   } as User
-  //   localStorage.setItem('token', token.value)
-  // }
-
   // 登录
   const login = async (credentials: LoginForm) => {
-    const { data } = await loginAPI(credentials)
-    token.value = data.token
-    user.value = data.user
+    console.log('🔐 开始登录，用户名:', credentials.username)
+    
+    const response = await loginAPI(credentials)
+    console.log('📡 后端响应:', response)
+    
+    // ⚠️ 后端返回格式: { code: 200, message: "...", data: { accessToken, refreshToken, user } }
+    const { accessToken: token, refreshToken: refresh, user: userData } = response.data
+    
+    console.log('✅ Token:', token)
+    console.log('👤 用户信息:', userData)
+    console.log('🎭 用户角色:', userData.role)
+    
+    // 保存状态
+    accessToken.value = token
+    refreshToken.value = refresh
+    user.value = userData
     
     // 保存到本地存储
-    localStorage.setItem('token', data.token)
+    localStorage.setItem('accessToken', token)
+    localStorage.setItem('refreshToken', refresh)
+    localStorage.setItem('user', JSON.stringify(userData))
     
-    // 如果选择记住我，保存更长时间
-    if (credentials.remember) {
-      localStorage.setItem('rememberMe', 'true')
-    }
+    console.log('💾 已保存到 localStorage')
   }
 
   // 获取用户信息
   const fetchUserInfo = async () => {
     try {
-      const { data } = await getUserInfo()
-      user.value = data
+      const response = await getUserInfo()
+      user.value = response.data
+      localStorage.setItem('user', JSON.stringify(response.data))
     } catch (error) {
       console.error('获取用户信息失败:', error)
       logout()
@@ -52,9 +56,12 @@ export const useAuthStore = defineStore('auth', () => {
 
   // 登出
   const logout = () => {
-    token.value = ''
+    accessToken.value = ''
+    refreshToken.value = ''
     user.value = null
-    localStorage.removeItem('token')
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('refreshToken')
+    localStorage.removeItem('user')
     localStorage.removeItem('rememberMe')
   }
 
@@ -62,11 +69,13 @@ export const useAuthStore = defineStore('auth', () => {
   const updateUser = (userData: Partial<User>) => {
     if (user.value) {
       user.value = { ...user.value, ...userData }
+      localStorage.setItem('user', JSON.stringify(user.value))
     }
   }
 
   return {
-    token,
+    accessToken,      
+    refreshToken,     
     user,
     isLoggedIn,
     isAdmin,

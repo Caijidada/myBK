@@ -144,8 +144,9 @@ const handleSubmit = async () => {
     try {
       // TODO: 调用登录API
       await authStore.login({
-        email: loginForm.email,
-        password: loginForm.password
+        username: loginForm.username,  
+        password: loginForm.password,
+        remember: loginForm.remember
       })
 
       ElMessage.success('登录成功')

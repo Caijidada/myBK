@@ -13,9 +13,13 @@ export interface User {
   createdAt: string
   updatedAt?: string
 }
-
+export interface LoginResponse {
+  accessToken: string
+  refreshToken: string
+  user: User
+}
 export interface LoginForm {
-  email: string
+  username: string
   password: string
   remember?: boolean
 }

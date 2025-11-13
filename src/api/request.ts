@@ -1,12 +1,10 @@
-// src/api/request.ts
 import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios'
 import { ElMessage } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
 import router from '@/router'
 
-// 创建 axios 实例
 const request: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json'
@@ -16,15 +14,14 @@ const request: AxiosInstance = axios.create({
 // 请求拦截器
 request.interceptors.request.use(
   (config) => {
-    // 添加 token
     const authStore = useAuthStore()
-    if (authStore.token) {
-      config.headers.Authorization = `Bearer ${authStore.token}`
+    if (authStore.accessToken) {
+      config.headers.Authorization = `Bearer ${authStore.accessToken}`
     }
     return config
   },
   (error) => {
-    console.error('请求错误:', error)
+    console.error('❌ 请求错误:', error)
     return Promise.reject(error)
   }
 )
@@ -33,12 +30,12 @@ request.interceptors.request.use(
 request.interceptors.response.use(
   (response: AxiosResponse) => {
     const { code, message, data } = response.data
+    
+    console.log('📡 API 响应:', { code, message })
 
-    // 根据后端约定的状态码处理
     if (code === 200) {
-      return response.data
+      return response.data  // 返回整个 data 对象 { code, message, data }
     } else if (code === 401) {
-      // token 过期或无效
       ElMessage.error('登录已过期，请重新登录')
       const authStore = useAuthStore()
       authStore.logout()
@@ -50,7 +47,7 @@ request.interceptors.response.use(
     }
   },
   (error) => {
-    console.error('响应错误:', error)
+    console.error('❌ 响应错误:', error)
 
     if (error.response) {
       const { status, data } = error.response
