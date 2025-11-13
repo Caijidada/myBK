@@ -12,17 +12,17 @@ export const useAuthStore = defineStore('auth', () => {
   const isLoggedIn = computed(() => !!token.value)
   const isAdmin = computed(() => user.value?.role === 'ADMIN')
   
-  // ✅ 开发模式下自动登录管理员
-  if (import.meta.env.MODE === 'development' && !token.value) {
-    token.value = 'dev-admin-token'
-    user.value = {
-      id: 1,
-      username: 'Admin',
-      role: 'ADMIN',
-      email: 'admin@example.com'
-    } as User
-    localStorage.setItem('token', token.value)
-  }
+  // // ✅ 开发模式下自动登录管理员
+  // if (import.meta.env.MODE === 'development' && !token.value) {
+  //   token.value = 'dev-admin-token'
+  //   user.value = {
+  //     id: 1,
+  //     username: 'Admin',
+  //     role: 'ADMIN',
+  //     email: 'admin@example.com'
+  //   } as User
+  //   localStorage.setItem('token', token.value)
+  // }
 
   // 登录
   const login = async (credentials: LoginForm) => {

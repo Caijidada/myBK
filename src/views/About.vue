@@ -1,17 +1,10 @@
 <template>
   <div class="min-h-screen bg-gray-50">
-    <!-- Hero Section -->
-    <div class="relative h-96 overflow-hidden">
-      <img
-        src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1920&q=80"
-        alt="About"
-        class="w-full h-full object-cover"
-      />
-      <div class="absolute inset-0 bg-gradient-to-r from-blue-900/80 to-purple-900/80 flex items-center justify-center">
-        <div class="text-center text-white">
-          <h1 class="text-5xl font-bold mb-4">关于我</h1>
-          <p class="text-xl opacity-90">热爱技术，热爱分享</p>
-        </div>
+    <!-- 头部（简约白色） -->
+    <div class="bg-white border-b border-gray-200 py-12">
+      <div class="max-w-7xl mx-auto px-8 text-center">
+        <h1 class="text-5xl font-bold mb-3 text-gray-800">关于我</h1>
+        <p class="text-xl text-gray-600">热爱技术，热爱分享</p>
       </div>
     </div>
 

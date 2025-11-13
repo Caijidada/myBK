@@ -1,10 +1,10 @@
 <template>
   <div class="min-h-screen bg-gray-50">
-    <!-- 页面头部 -->
-    <div class="bg-gradient-to-r from-purple-500 to-pink-600 text-white py-16">
+    <!-- 页面头部（简约白色） -->
+    <div class="bg-white border-b border-gray-200 py-12">
       <div class="max-w-7xl mx-auto px-8 text-center">
-        <h1 class="text-4xl font-bold mb-4">标签云</h1>
-        <p class="text-lg opacity-90">
+        <h1 class="text-4xl font-bold mb-3 text-gray-800">标签云</h1>
+        <p class="text-lg text-gray-600">
           通过标签快速找到你感兴趣的文章
         </p>
       </div>

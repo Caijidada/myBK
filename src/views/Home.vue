@@ -3,21 +3,17 @@
   <div class="min-h-screen bg-gray-50">
     
     
-    <section
-      class="relative h-[500px] overflow-hidden flex items-center justify-start pl-20"
-      style="background-image: url('https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1920&q=80'); background-size: cover; background-position: center;"
-    >
-      <div class="absolute inset-0 bg-black opacity-50 "></div>
-      <div class="relative max-w-lg z-10 text-white">
-        <h2 class="text-5xl font-bold mb-4 animate-fade-in">探索知识的无限可能</h2>
-        <p class="mb-6 text-lg opacity-90">
-          在这里，你可以找到各种技术分享、生活感悟和创意灵感。让我们一起成长，共同进步。
+    <section class="bg-white border-b border-gray-200 py-12">
+      <div class="max-w-7xl mx-auto px-8 text-center">
+        <h1 class="text-4xl font-bold mb-3 text-gray-800">每日算法</h1>
+        <p class="text-lg text-gray-600">
+          今日题目：{{ todayProblem.title }} —— {{ todayProblem.description }}
         </p>
         <button 
-          @click="router.push('/articles')"
-          class="bg-white text-blue-600 hover:bg-gray-100 px-6 py-3 rounded-full font-medium transition-all hover:shadow-lg"
+          @click="router.push('/daily-algorithm')"
+          class="mt-4 px-6 py-3 bg-blue-600 text-white rounded-full font-medium hover:bg-blue-700 transition-colors"
         >
-          开始阅读
+          前往每日算法
         </button>
       </div>
     </section>
@@ -147,7 +143,7 @@
     </section>
 
     <!-- Statistics Section -->
-    <section class="py-16 px-8 bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+    <section class="py-16 px-8 bg-gradient-to-r  text-white">
       <div class="max-w-7xl mx-auto">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           <div class="space-y-2">
@@ -181,7 +177,6 @@ import ArticleCard from '@/components/common/ArticleCard.vue'
 import CategoryCard from '@/components/common/CategoryCard.vue'
 import TagCloud from '@/components/common/TagCloud.vue'
 import dayjs from 'dayjs'
-import AppHeader from '@/components/layout/AppHeader.vue'
 import 'swiper/css'
 import 'swiper/css/pagination'
 
@@ -189,6 +184,11 @@ import 'swiper/swiper-bundle.css'
 
 const router = useRouter()
 const swiperModules = [Pagination, Autoplay]
+
+const todayProblem = ref({
+  title: '两数之和',
+  description: '在数组中找到和为目标值的两个下标'
+})
 
 // 状态
 const loading = ref(false)
@@ -343,7 +343,6 @@ onMounted(() => {
   // TODO: 加载首页数据
 })
 </script>
-
 <style scoped>
 @keyframes fade-in {
   from {

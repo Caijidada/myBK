@@ -12,9 +12,9 @@
           </h1>
           
           <!-- 桌面端导航 -->
-          <nav class="hidden md:flex items-center space-x-6">
+          <nav ref="navContainer" class="hidden md:flex items-center space-x-6 relative">
             <router-link
-              v-for="item in navItems" 
+              v-for="(item, idx) in navItems" 
               :key="item.path"
               :to="item.path" 
               class="px-4 py-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-all"
@@ -22,6 +22,11 @@
             >
               {{ item.label }}
             </router-link>
+            <span 
+              v-if="indicatorWidth > 0"
+              class="absolute bottom-0 h-0.5 bg-blue-600 transition-all duration-300"
+              :style="{ left: indicatorLeft + 'px', width: indicatorWidth + 'px' }"
+            ></span>
           </nav>
         </div>
         
@@ -60,48 +65,54 @@
             </div>
             
             <!-- 下拉菜单 -->
-            <div 
-              v-if="userMenuOpen"
-              class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
-            >
-              <router-link 
-                to="/user/profile" 
-                class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+            <transition name="menu">
+              <div 
+                v-if="userMenuOpen"
+                class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
               >
-                <i class="fas fa-user w-5 text-gray-400"></i>
-                <span class="ml-3">个人中心</span>
-              </router-link>
-              <router-link 
-                to="/user/articles" 
-                class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-              >
-                <i class="fas fa-file-alt w-5 text-gray-400"></i>
-                <span class="ml-3">我的文章</span>
-              </router-link>
-              <router-link 
-                to="/editor" 
-                class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-              >
-                <i class="fas fa-edit w-5 text-gray-400"></i>
-                <span class="ml-3">写文章</span>
-              </router-link>
-              <router-link 
-                v-if="isAdmin" 
-                to="/admin/dashboard" 
-                class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-              >
-                <i class="fas fa-cog w-5 text-gray-400"></i>
-                <span class="ml-3">后台管理</span>
-              </router-link>
-              <hr class="my-2 border-gray-200" />
-              <button
-                @click="handleLogout" 
-                class="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
-              >
-                <i class="fas fa-sign-out-alt w-5"></i>
-                <span class="ml-3">退出登录</span>
-              </button>
-            </div>
+                <router-link 
+                  to="/user/profile" 
+                  class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                  @click="userMenuOpen = false"
+                >
+                  <i class="fas fa-user w-5 text-gray-400"></i>
+                  <span class="ml-3">个人中心</span>
+                </router-link>
+                <router-link 
+                  to="/user/articles" 
+                  class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                  @click="userMenuOpen = false"
+                >
+                  <i class="fas fa-file-alt w-5 text-gray-400"></i>
+                  <span class="ml-3">我的文章</span>
+                </router-link>
+                <router-link 
+                  to="/editor" 
+                  class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                  @click="userMenuOpen = false"
+                >
+                  <i class="fas fa-edit w-5 text-gray-400"></i>
+                  <span class="ml-3">写文章</span>
+                </router-link>
+                <router-link 
+                  v-if="isAdmin" 
+                  to="/admin/dashboard" 
+                  class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                  @click="userMenuOpen = false"
+                >
+                  <i class="fas fa-cog w-5 text-gray-400"></i>
+                  <span class="ml-3">后台管理</span>
+                </router-link>
+                <hr class="my-2 border-gray-200" />
+                <button
+                  @click="handleLogout" 
+                  class="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                >
+                  <i class="fas fa-sign-out-alt w-5"></i>
+                  <span class="ml-3">退出登录</span>
+                </button>
+              </div>
+            </transition>
           </div>
 
           <!-- 登录按钮 -->
@@ -125,38 +136,40 @@
     </div>
 
     <!-- 移动端菜单 -->
-    <div 
-      v-if="mobileMenuOpen"
-      class="md:hidden border-t border-gray-200 bg-white"
-    >
-      <nav class="px-4 py-4 space-y-1">
-        <router-link
-          v-for="item in navItems" 
-          :key="item.path"
-          :to="item.path" 
-          class="block px-4 py-3 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-          @click="mobileMenuOpen = false"
-        >
-          {{ item.label }}
-        </router-link>
-      </nav>
-      
-      <!-- 移动端搜索 -->
-      <div class="px-4 pb-4">
-        <input
-          v-model="searchKeyword"
-          type="text"
-          placeholder="搜索文章..."
-          @keyup.enter="handleSearch"
-          class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-        />
+    <transition name="slide">
+      <div 
+        v-if="mobileMenuOpen"
+        class="md:hidden border-t border-gray-200 bg-white"
+      >
+        <nav class="px-4 py-4 space-y-1">
+          <router-link
+            v-for="item in navItems" 
+            :key="item.path"
+            :to="item.path" 
+            class="block px-4 py-3 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+            @click="mobileMenuOpen = false"
+          >
+            {{ item.label }}
+          </router-link>
+        </nav>
+        
+        <!-- 移动端搜索 -->
+        <div class="px-4 pb-4">
+          <input
+            v-model="searchKeyword"
+            type="text"
+            placeholder="搜索文章..."
+            @keyup.enter="handleSearch"
+            class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          />
+        </div>
       </div>
-    </div>
+    </transition>
   </header>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onMounted, nextTick, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
@@ -192,4 +205,43 @@ const handleLogout = () => {
   userMenuOpen.value = false
   router.push('/')
 }
+
+const navContainer = ref<HTMLElement | null>(null)
+const indicatorLeft = ref(0)
+const indicatorWidth = ref(0)
+
+const updateIndicator = () => {
+  const container = navContainer.value
+  if (!container) return
+  const currentIndex = navItems.findIndex(n => {
+    if (n.path === '/') return route.path === '/'
+    return route.path.startsWith(n.path)
+  })
+  const links = container.querySelectorAll('a')
+  const el = currentIndex >= 0 ? links[currentIndex] : undefined
+  if (!el || typeof (el as HTMLElement).getBoundingClientRect !== 'function') {
+    indicatorWidth.value = 0
+    return
+  }
+  const rect = (el as HTMLElement).getBoundingClientRect()
+  const cRect = container.getBoundingClientRect()
+  indicatorLeft.value = rect.left - cRect.left
+  indicatorWidth.value = rect.width
+}
+
+onMounted(() => {
+  nextTick(updateIndicator)
+  window.addEventListener('resize', updateIndicator)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', updateIndicator)
+})
+
+watch(() => route.fullPath, async () => {
+  userMenuOpen.value = false
+  mobileMenuOpen.value = false
+  await nextTick()
+  updateIndicator()
+})
 </script>

@@ -43,6 +43,12 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '关于' }
   },
   {
+    path: '/daily-algorithm',
+    name: 'DailyAlgorithm',
+    component: () => import('@/views/DailyAlgorithm.vue'),
+    meta: { title: '每日算法' }
+  },
+  {
   path: '/archives',
   name: 'Archives',
   component: () => import('@/views/Archives.vue'),

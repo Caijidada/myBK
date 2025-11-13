@@ -5,7 +5,11 @@
 
     <!-- 中间内容填充剩余空间 -->
     <main class="flex-1">
-      <RouterView />
+      <RouterView v-slot="{ Component }">
+        <transition name="page" mode="out-in">
+          <component :is="Component" />
+        </transition>
+      </RouterView>
     </main>
 
     <!-- 底部页脚 -->

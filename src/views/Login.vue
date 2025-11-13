@@ -1,9 +1,11 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
+  <div
+    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-md w-full">
       <!-- Logo 和标题 -->
       <div class="text-center mb-8">
-        <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+        <div
+          class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
           <i class="fas fa-blog text-3xl text-white"></i>
         </div>
         <h2 class="text-3xl font-bold text-gray-900 mb-2">欢迎回来</h2>
@@ -15,17 +17,13 @@
         <!-- 第三方登录 -->
         <div class="mb-6">
           <div class="grid grid-cols-2 gap-3">
-            <button
-              @click="handleSocialLogin('github')"
-              class="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
+            <button @click="handleSocialLogin('github')"
+              class="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
               <i class="fab fa-github text-xl mr-2"></i>
               <span class="text-sm font-medium">GitHub</span>
             </button>
-            <button
-              @click="handleSocialLogin('google')"
-              class="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
+            <button @click="handleSocialLogin('google')"
+              class="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
               <i class="fab fa-google text-xl mr-2"></i>
               <span class="text-sm font-medium">Google</span>
             </button>
@@ -43,34 +41,16 @@
         </div>
 
         <!-- 表单 -->
-        <el-form
-          ref="loginFormRef"
-          :model="loginForm"
-          :rules="loginRules"
-          @submit.prevent="handleSubmit"
-        >
-          <!-- 邮箱 -->
-          <el-form-item prop="email">
-            <el-input
-              v-model="loginForm.email"
-              type="email"
-              placeholder="请输入邮箱"
-              size="large"
-              :prefix-icon="Message"
-            >
-            </el-input>
+        <el-form ref="loginFormRef" :model="loginForm" :rules="loginRules" @submit.prevent="handleSubmit">
+          <!-- 用户名 -->
+          <el-form-item prop="username">
+            <el-input v-model="loginForm.username" placeholder="请输入用户名" size="large" />
           </el-form-item>
 
           <!-- 密码 -->
           <el-form-item prop="password">
-            <el-input
-              v-model="loginForm.password"
-              type="password"
-              placeholder="请输入密码"
-              size="large"
-              :prefix-icon="Lock"
-              show-password
-            >
+            <el-input v-model="loginForm.password" type="password" placeholder="请输入密码" size="large" :prefix-icon="Lock"
+              show-password>
             </el-input>
           </el-form-item>
 
@@ -85,13 +65,7 @@
           </div>
 
           <!-- 登录按钮 -->
-          <el-button
-            type="primary"
-            size="large"
-            class="w-full"
-            :loading="loading"
-            @click="handleSubmit"
-          >
+          <el-button type="primary" size="large" class="w-full" :loading="loading" @click="handleSubmit">
             {{ loading ? '登录中...' : '登录' }}
           </el-button>
         </el-form>
@@ -117,8 +91,12 @@
     </div>
 
     <!-- 装饰性元素 -->
-    <div class="fixed top-0 left-0 w-64 h-64 bg-blue-400 rounded-full filter blur-3xl opacity-20 -translate-x-1/2 -translate-y-1/2"></div>
-    <div class="fixed bottom-0 right-0 w-64 h-64 bg-purple-400 rounded-full filter blur-3xl opacity-20 translate-x-1/2 translate-y-1/2"></div>
+    <div
+      class="fixed top-0 left-0 w-64 h-64 bg-blue-400 rounded-full filter blur-3xl opacity-20 -translate-x-1/2 -translate-y-1/2">
+    </div>
+    <div
+      class="fixed bottom-0 right-0 w-64 h-64 bg-purple-400 rounded-full filter blur-3xl opacity-20 translate-x-1/2 translate-y-1/2">
+    </div>
   </div>
 </template>
 
@@ -138,16 +116,15 @@ const loading = ref(false)
 
 // 表单数据
 const loginForm = reactive({
-  email: '',
+  username: '',
   password: '',
   remember: false
 })
 
 // 表单验证规则
 const loginRules: FormRules = {
-  email: [
-    { required: true, message: '请输入邮箱', trigger: 'blur' },
-    { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' }
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
@@ -172,7 +149,7 @@ const handleSubmit = async () => {
       })
 
       ElMessage.success('登录成功')
-      
+
       // 跳转到首页或之前的页面
       const redirect = router.currentRoute.value.query.redirect as string
       router.push(redirect || '/')
