@@ -13,7 +13,7 @@ export const register = (data: RegisterForm) => {
 
 // 发送邮箱验证码
 export const sendEmailCaptcha = (email: string) => {
-  return request.post<ApiResponse>('/auth/captcha', { email })
+  return request.post<ApiResponse>(`/auth/send-captcha?email=${email}`)
 }
 
 // 获取当前用户信息

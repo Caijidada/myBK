@@ -73,15 +73,24 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // 设置tokens（用于OAuth2登录）
+  const setTokens = (access: string, refresh: string) => {
+    accessToken.value = access
+    refreshToken.value = refresh
+    localStorage.setItem('accessToken', access)
+    localStorage.setItem('refreshToken', refresh)
+  }
+
   return {
-    accessToken,      
-    refreshToken,     
+    accessToken,
+    refreshToken,
     user,
     isLoggedIn,
     isAdmin,
     login,
     logout,
     fetchUserInfo,
-    updateUser
+    updateUser,
+    setTokens
   }
 })

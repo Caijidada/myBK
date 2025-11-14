@@ -325,8 +325,9 @@ const handleSubmit = async () => {
 
 // 第三方注册
 const handleSocialRegister = (platform: string) => {
-  ElMessage.info(`${platform} 注册功能开发中...`)
-  // TODO: 实现第三方注册
+  // 重定向到后端OAuth2授权端点
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
+  window.location.href = `${baseUrl}/oauth2/authorization/${platform}`
 }
 </script>
 

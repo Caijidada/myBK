@@ -68,6 +68,12 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/Register.vue'),
     meta: { title: '注册', hideForAuth: true }
   },
+  {
+    path: '/oauth2/callback',
+    name: 'OAuth2Callback',
+    component: () => import('@/views/OAuth2Callback.vue'),
+    meta: { title: 'OAuth2登录中...' }
+  },
 
   // ==================== 用户中心路由 ====================
   {
