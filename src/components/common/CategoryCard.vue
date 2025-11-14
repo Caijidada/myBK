@@ -78,7 +78,7 @@ const iconColor = computed(() => colorSchemes[colorIndex.value].icon)
 
 // 跳转到分类页面
 const goToCategory = () => {
-  router.push(`/articles?category=${props.category.id}`)
+  router.push(`/articles?categoryId=${props.category.id}`)
 }
 </script>
 

@@ -164,10 +164,13 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { User, Message, Lock } from '@element-plus/icons-vue'
+import { register, sendEmailCaptcha, login } from '@/api/user'
 
 const router = useRouter()
+const authStore = useAuthStore()
 
 // 表单引用
 const registerFormRef = ref<FormInstance>()
@@ -248,10 +251,17 @@ const handleGetCaptcha = async () => {
     return
   }
 
+  // 验证邮箱格式
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(registerForm.email)) {
+    ElMessage.warning('请输入正确的邮箱格式')
+    return
+  }
+
   try {
-    // TODO: 调用发送验证码API
+    await sendEmailCaptcha(registerForm.email)
     ElMessage.success('验证码已发送到您的邮箱')
-    
+
     // 开始倒计时
     captchaCountdown.value = 60
     const timer = setInterval(() => {
@@ -275,18 +285,36 @@ const handleSubmit = async () => {
     loading.value = true
 
     try {
-      // TODO: 调用注册API
+      // 调用注册API
       const { username, email, password, captcha } = registerForm
-      
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      
-      ElMessage.success('注册成功，即将跳转到登录页')
-      
-      // 跳转到登录页
-      setTimeout(() => {
+
+      await register({
+        username,
+        email,
+        password,
+        confirmPassword: registerForm.confirmPassword,
+        captcha,
+        agree: registerForm.agree
+      })
+
+      ElMessage.success('注册成功，正在自动登录...')
+
+      // 注册成功后自动登录
+      try {
+        await authStore.login({
+          username,
+          password
+        })
+
+        ElMessage.success('登录成功')
+
+        // 跳转到首页
+        router.push('/')
+      } catch (loginError: any) {
+        // 自动登录失败，跳转到登录页
+        ElMessage.warning('请手动登录')
         router.push('/login')
-      }, 1500)
+      }
     } catch (error: any) {
       ElMessage.error(error.message || '注册失败，请稍后重试')
     } finally {

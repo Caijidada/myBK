@@ -6,7 +6,7 @@
         <h1 class="text-3xl font-bold text-gray-800 mb-4">
           {{ pageTitle }}
         </h1>
-        
+
         <!-- 筛选条件标签 -->
         <div v-if="activeFilters.length > 0" class="flex flex-wrap gap-2 mb-4">
           <div
@@ -28,26 +28,21 @@
         </div>
 
         <!-- 工具栏 -->
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div class="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4">
           <!-- 搜索框 -->
-          <SearchBar 
-            :placeholder="'搜索文章...'"
-            @search="handleSearch"
-          />
-          <div class="flex-1"></div>
-          <!-- 排序和筛选 -->
-          <div class="flex items-center space-x-3 flex-1">
-            <!-- 排序 -->
-            <el-select v-model="sortBy" placeholder="排序方式" class="w-40">
-              <el-option label="最新发布" value="time" />
-              <el-option label="最多浏览" value="views" />
-              <el-option label="最多点赞" value="likes" />
-            </el-select>
+          <div class="w-full lg:w-64">
+            <SearchBar
+              :placeholder="'搜索文章...'"
+              @search="handleSearch"
+            />
+          </div>
 
+          <!-- 排序和筛选 -->
+          <div class="flex flex-wrap items-center gap-3">
             <!-- 分类筛选 -->
-            <el-select 
-              v-model="selectedCategory" 
-              placeholder="选择分类" 
+            <el-select
+              v-model="selectedCategory"
+              placeholder="选择分类"
               clearable
               class="w-40"
               @change="handleCategoryChange"
@@ -61,12 +56,11 @@
             </el-select>
 
             <!-- 标签筛选 -->
-            <el-select 
-              v-model="selectedTags" 
-              placeholder="选择标签" 
-              multiple
+            <el-select
+              v-model="selectedTag"
+              placeholder="选择标签"
               clearable
-              class="w-60"
+              class="w-40"
               @change="handleTagChange"
             >
               <el-option
@@ -78,7 +72,7 @@
             </el-select>
 
             <!-- 视图切换 -->
-            <div class="flex border border-gray-300 rounded-lg overflow-hidden w-77">
+            <div class="flex border border-gray-300 rounded-lg overflow-hidden flex-shrink-0">
               <button
                 @click="viewMode = 'grid'"
                 :class="[
@@ -110,10 +104,22 @@
         找到 <span class="font-medium text-blue-600">{{ totalCount }}</span> 篇文章
       </div>
 
+      <!-- 加载状态 -->
+      <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div v-for="n in 6" :key="n" class="animate-pulse">
+          <div class="bg-gray-200 h-48 rounded-t-xl"></div>
+          <div class="p-6 bg-white rounded-b-xl">
+            <div class="h-4 bg-gray-200 rounded w-3/4 mb-3"></div>
+            <div class="h-3 bg-gray-200 rounded w-full mb-2"></div>
+            <div class="h-3 bg-gray-200 rounded w-5/6"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- 网格视图 -->
-      <div v-if="viewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        <ArticleCard 
-          v-for="article in articles" 
+      <div v-else-if="viewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <ArticleCard
+          v-for="article in articles"
           :key="article.id"
           :article="article"
         />
@@ -130,7 +136,7 @@
           <!-- 封面图 -->
           <div class="w-48 h-32 flex-shrink-0 rounded-lg overflow-hidden">
             <img
-              :src="article.coverImage"
+              :src="article.coverImage || 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&q=80'"
               :alt="article.title"
               class="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
             />
@@ -145,7 +151,7 @@
                   {{ article.categoryName }}
                 </span>
                 <span>·</span>
-                <span>{{ formatDate(article.createdAt) }}</span>
+                <span>{{ formatDate(article.publishedAt) }}</span>
               </div>
 
               <!-- 标题 -->
@@ -161,11 +167,11 @@
               <!-- 标签 -->
               <div class="flex flex-wrap gap-2">
                 <span
-                  v-for="tag in article.tags?.slice(0, 3)"
-                  :key="tag.id"
+                  v-for="tagName in article.tagNames?.slice(0, 3)"
+                  :key="tagName"
                   class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
                 >
-                  #{{ tag.name }}
+                  #{{ tagName }}
                 </span>
               </div>
             </div>
@@ -174,7 +180,7 @@
             <div class="flex items-center justify-between text-sm text-gray-500 mt-4 pt-4 border-t border-gray-100">
               <div class="flex items-center space-x-1">
                 <img
-                  :src="article.authorAvatar"
+                  :src="article.authorAvatar || 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'"
                   :alt="article.authorName"
                   class="w-6 h-6 rounded-full"
                 />
@@ -222,6 +228,10 @@ import { useRouter, useRoute } from 'vue-router'
 import ArticleCard from '@/components/common/ArticleCard.vue'
 import SearchBar from '@/components/common/SearchBar.vue'
 import Pagination from '@/components/common/Pagination.vue'
+import { getArticleList } from '@/api/article'
+import { getCategoryList } from '@/api/category'
+import { getTagList } from '@/api/tag'
+import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
 
 const router = useRouter()
@@ -230,9 +240,8 @@ const route = useRoute()
 // 状态
 const loading = ref(false)
 const viewMode = ref<'grid' | 'list'>('grid')
-const sortBy = ref('time')
 const selectedCategory = ref<number | null>(null)
-const selectedTags = ref<number[]>([])
+const selectedTag = ref<number | null>(null)
 const searchKeyword = ref('')
 const currentPage = ref(1)
 const pageSize = ref(12)
@@ -240,18 +249,8 @@ const totalCount = ref(0)
 
 // 数据
 const articles = ref<any[]>([])
-const categories = ref([
-  { id: 1, name: '前端开发' },
-  { id: 2, name: '后端开发' },
-  { id: 3, name: '移动开发' },
-  { id: 4, name: '人工智能' }
-])
-const tags = ref([
-  { id: 1, name: 'JavaScript' },
-  { id: 2, name: 'Vue.js' },
-  { id: 3, name: 'React' },
-  { id: 4, name: 'TypeScript' }
-])
+const categories = ref<any[]>([])
+const tags = ref<any[]>([])
 
 // 页面标题
 const pageTitle = computed(() => {
@@ -262,12 +261,9 @@ const pageTitle = computed(() => {
     const category = categories.value.find(c => c.id === selectedCategory.value)
     return category ? `分类: ${category.name}` : '文章列表'
   }
-  if (selectedTags.value.length > 0) {
-    const tagNames = selectedTags.value
-      .map(id => tags.value.find(t => t.id === id)?.name)
-      .filter(Boolean)
-      .join(', ')
-    return `标签: ${tagNames}`
+  if (selectedTag.value) {
+    const tag = tags.value.find(t => t.id === selectedTag.value)
+    return tag ? `标签: ${tag.name}` : '文章列表'
   }
   return '全部文章'
 })
@@ -275,7 +271,7 @@ const pageTitle = computed(() => {
 // 活跃的筛选条件
 const activeFilters = computed(() => {
   const filters: Array<{ key: string; label: string; value: string }> = []
-  
+
   if (searchKeyword.value) {
     filters.push({ key: 'keyword', label: '关键词', value: searchKeyword.value })
   }
@@ -285,20 +281,73 @@ const activeFilters = computed(() => {
       filters.push({ key: 'category', label: '分类', value: category.name })
     }
   }
-  if (selectedTags.value.length > 0) {
-    const tagNames = selectedTags.value
-      .map(id => tags.value.find(t => t.id === id)?.name)
-      .filter(Boolean)
-      .join(', ')
-    filters.push({ key: 'tags', label: '标签', value: tagNames })
+  if (selectedTag.value) {
+    const tag = tags.value.find(t => t.id === selectedTag.value)
+    if (tag) {
+      filters.push({ key: 'tag', label: '标签', value: tag.name })
+    }
   }
-  
+
   return filters
 })
 
 // 格式化日期
 const formatDate = (date: string) => {
   return dayjs(date).format('YYYY-MM-DD')
+}
+
+// 加载分类
+const loadCategories = async () => {
+  try {
+    const res = await getCategoryList()
+    categories.value = res.data || []
+  } catch (error) {
+    console.error('加载分类失败:', error)
+  }
+}
+
+// 加载标签
+const loadTags = async () => {
+  try {
+    const res = await getTagList()
+    tags.value = res.data || []
+  } catch (error) {
+    console.error('加载标签失败:', error)
+  }
+}
+
+// 加载文章列表
+const loadArticles = async () => {
+  try {
+    loading.value = true
+
+    const params: any = {
+      page: currentPage.value,
+      size: pageSize.value
+    }
+
+    if (selectedCategory.value) {
+      params.categoryId = selectedCategory.value
+    }
+    if (selectedTag.value) {
+      params.tagId = selectedTag.value
+    }
+    if (searchKeyword.value) {
+      params.keyword = searchKeyword.value
+    }
+
+    const res = await getArticleList(params)
+    articles.value = res.data.records || []
+    totalCount.value = res.data.total || 0
+
+  } catch (error: any) {
+    console.error('加载文章失败:', error)
+    ElMessage.error(error.message || '加载文章失败')
+    articles.value = []
+    totalCount.value = 0
+  } finally {
+    loading.value = false
+  }
 }
 
 // 处理搜索
@@ -329,10 +378,11 @@ const removeFilter = (key: string) => {
     case 'category':
       selectedCategory.value = null
       break
-    case 'tags':
-      selectedTags.value = []
+    case 'tag':
+      selectedTag.value = null
       break
   }
+  currentPage.value = 1
   loadArticles()
 }
 
@@ -340,8 +390,7 @@ const removeFilter = (key: string) => {
 const clearAllFilters = () => {
   searchKeyword.value = ''
   selectedCategory.value = null
-  selectedTags.value = []
-  sortBy.value = 'time'
+  selectedTag.value = null
   currentPage.value = 1
   loadArticles()
 }
@@ -354,61 +403,18 @@ const handlePageChange = (page: number, size: number) => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-// 加载文章列表
-const loadArticles = async () => {
-  loading.value = true
-  
-  // TODO: 调用API获取文章列表
-  // const params = {
-  //   page: currentPage.value,
-  //   size: pageSize.value,
-  //   sortBy: sortBy.value,
-  //   category: selectedCategory.value,
-  //   tags: selectedTags.value,
-  //   keyword: searchKeyword.value
-  // }
-  
-  // 模拟数据
-  setTimeout(() => {
-    articles.value = [
-      {
-        id: 1,
-        title: '构建高性能 Web 应用的最佳实践',
-        summary: '本文探讨了提升 Web 应用性能的关键策略。',
-        coverImage: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80',
-        authorName: '张三',
-        authorAvatar: 'https://i.pravatar.cc/150?img=1',
-        categoryName: '前端开发',
-        tags: [{ id: 1, name: 'JavaScript' }],
-        viewCount: 1245,
-        likeCount: 87,
-        commentCount: 23,
-        createdAt: '2024-11-05T10:00:00Z'
-      }
-    ]
-    totalCount.value = 50
-    loading.value = false
-  }, 500)
-}
-
-// 监听排序变化
-watch(sortBy, () => {
-  currentPage.value = 1
-  loadArticles()
-})
-
 // 从URL读取查询参数
-onMounted(() => {
-  if (route.query.keyword) {
-    searchKeyword.value = route.query.keyword as string
+onMounted(async () => {
+  await Promise.all([loadCategories(), loadTags()])
+
+  if (route.query.categoryId) {
+    selectedCategory.value = Number(route.query.categoryId)
   }
-  if (route.query.category) {
-    selectedCategory.value = Number(route.query.category)
+  if (route.query.tagId) {
+    selectedTag.value = Number(route.query.tagId)
   }
-  if (route.query.tag) {
-    selectedTags.value = [Number(route.query.tag)]
-  }
-  loadArticles()
+
+  await loadArticles()
 })
 </script>
 

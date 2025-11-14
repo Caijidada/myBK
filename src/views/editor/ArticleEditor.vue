@@ -244,8 +244,8 @@
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">发布方式</label>
           <el-radio-group v-model="publishType">
-            <el-radio label="now">立即发布</el-radio>
-            <el-radio label="schedule">定时发布</el-radio>
+            <el-radio value="now">立即发布</el-radio>
+            <el-radio value="schedule">定时发布</el-radio>
           </el-radio-group>
         </div>
 
@@ -263,8 +263,8 @@
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">文章可见性</label>
           <el-radio-group v-model="visibility">
-            <el-radio label="public">公开</el-radio>
-            <el-radio label="private">私密</el-radio>
+            <el-radio value="public">公开</el-radio>
+            <el-radio value="private">私密</el-radio>
           </el-radio-group>
         </div>
       </div>
@@ -305,6 +305,10 @@ import { marked } from 'marked'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/github-dark.css'
 import dayjs from 'dayjs'
+import { getArticleDetail, createArticle, updateArticle } from '@/api/article'
+import { getCategoryList } from '@/api/category'
+import { getTagList } from '@/api/tag'
+import { uploadImage, uploadCover } from '@/api/upload'
 
 const router = useRouter()
 const route = useRoute()
@@ -320,6 +324,7 @@ marked.setOptions({
 
 // 是否为编辑模式
 const isEdit = computed(() => !!route.query.id)
+const articleId = computed(() => route.query.id ? Number(route.query.id) : null)
 
 // 引用
 const editorRef = ref<HTMLTextAreaElement>()
@@ -349,19 +354,51 @@ const articleForm = reactive({
 })
 
 // 分类和标签数据
-const categories = ref([
-  { id: 1, name: '前端开发', icon: 'fab fa-html5' },
-  { id: 2, name: '后端开发', icon: 'fas fa-server' },
-  { id: 3, name: '移动开发', icon: 'fas fa-mobile-alt' },
-  { id: 4, name: '人工智能', icon: 'fas fa-brain' }
-])
+const categories = ref<any[]>([])
+const tags = ref<any[]>([])
 
-const tags = ref([
-  { id: 1, name: 'JavaScript' },
-  { id: 2, name: 'Vue' },
-  { id: 3, name: 'React' },
-  { id: 4, name: 'TypeScript' }
-])
+// 加载分类
+const loadCategories = async () => {
+  try {
+    const res = await getCategoryList()
+    categories.value = res.data || []
+  } catch (error) {
+    console.error('加载分类失败:', error)
+  }
+}
+
+// 加载标签
+const loadTags = async () => {
+  try {
+    const res = await getTagList()
+    tags.value = res.data || []
+  } catch (error) {
+    console.error('加载标签失败:', error)
+  }
+}
+
+// 加载文章数据（编辑模式）
+const loadArticle = async () => {
+  if (!articleId.value) return
+
+  try {
+    const res = await getArticleDetail(articleId.value)
+    const article = res.data
+
+    // 预填充表单数据
+    articleForm.title = article.title || ''
+    articleForm.summary = article.summary || ''
+    articleForm.content = article.content || ''
+    articleForm.coverImage = article.coverImage || ''
+    articleForm.categoryId = article.category?.id || null
+    articleForm.tags = article.tags?.map((t: any) => t.id) || []
+
+    ElMessage.success('文章加载成功')
+  } catch (error: any) {
+    console.error('加载文章失败:', error)
+    ElMessage.error(error.message || '加载文章失败')
+  }
+}
 
 // Markdown 工具栏
 const markdownTools = [
@@ -435,14 +472,44 @@ const handleImageChange = async (e: Event) => {
   const file = target.files?.[0]
   if (!file) return
 
-  // TODO: 上传图片到服务器
-  ElMessage.info('图片上传功能开发中...')
-  
-  // 模拟上传
-  const imageUrl = URL.createObjectURL(file)
-  insertMarkdown(`![图片描述](${imageUrl})`)
-  
-  target.value = ''
+  // 验证文件类型
+  if (!file.type.startsWith('image/')) {
+    ElMessage.error('请选择图片文件')
+    target.value = ''
+    return
+  }
+
+  // 验证文件大小 (最大5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    ElMessage.error('图片大小不能超过5MB')
+    target.value = ''
+    return
+  }
+
+  const loadingMsg = ElMessage({
+    message: '正在上传图片...',
+    type: 'info',
+    duration: 0
+  })
+
+  try {
+    const res = await uploadImage(file)
+    loadingMsg.close()
+
+    if (res.data?.url) {
+      // 插入图片Markdown语法
+      insertMarkdown(`![${file.name}](${res.data.url})`)
+      ElMessage.success('图片上传成功')
+    } else {
+      ElMessage.error('图片上传失败')
+    }
+  } catch (error: any) {
+    loadingMsg.close()
+    console.error('图片上传失败:', error)
+    ElMessage.error(error.message || '图片上传失败')
+  } finally {
+    target.value = ''
+  }
 }
 
 // 上传封面
@@ -455,13 +522,43 @@ const handleCoverChange = async (e: Event) => {
   const file = target.files?.[0]
   if (!file) return
 
-  // TODO: 上传封面到服务器
-  ElMessage.info('封面上传功能开发中...')
-  
-  // 模拟上传
-  articleForm.coverImage = URL.createObjectURL(file)
-  
-  target.value = ''
+  // 验证文件类型
+  if (!file.type.startsWith('image/')) {
+    ElMessage.error('请选择图片文件')
+    target.value = ''
+    return
+  }
+
+  // 验证文件大小 (最大5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    ElMessage.error('图片大小不能超过5MB')
+    target.value = ''
+    return
+  }
+
+  const loadingMsg = ElMessage({
+    message: '正在上传封面...',
+    type: 'info',
+    duration: 0
+  })
+
+  try {
+    const res = await uploadCover(file)
+    loadingMsg.close()
+
+    if (res.data?.url) {
+      articleForm.coverImage = res.data.url
+      ElMessage.success('封面上传成功')
+    } else {
+      ElMessage.error('封面上传失败')
+    }
+  } catch (error: any) {
+    loadingMsg.close()
+    console.error('封面上传失败:', error)
+    ElMessage.error(error.message || '封面上传失败')
+  } finally {
+    target.value = ''
+  }
 }
 
 // 保存草稿
@@ -471,14 +568,39 @@ const handleSaveDraft = async () => {
     return
   }
 
+  if (!articleForm.categoryId) {
+    ElMessage.warning('请选择分类')
+    return
+  }
+
   saving.value = true
   try {
-    // TODO: 调用保存草稿API
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
+    const data = {
+      title: articleForm.title,
+      summary: articleForm.summary,
+      content: articleForm.content,
+      coverImage: articleForm.coverImage,
+      categoryId: articleForm.categoryId,
+      tagIds: articleForm.tags,
+      isPublished: false
+    }
+
+    if (isEdit.value && articleId.value) {
+      // 更新文章
+      await updateArticle(articleId.value, data)
+    } else {
+      // 创建新文章
+      const res = await createArticle(data)
+      // 创建成功后切换到编辑模式
+      if (res.data?.id) {
+        router.replace(`/editor?id=${res.data.id}`)
+      }
+    }
+
     lastSaveTime.value = dayjs().format('HH:mm:ss 已保存')
     ElMessage.success('草稿保存成功')
   } catch (error: any) {
+    console.error('保存失败:', error)
     ElMessage.error(error.message || '保存失败')
   } finally {
     saving.value = false
@@ -509,16 +631,32 @@ const handlePublish = async () => {
 
   publishing.value = true
   try {
-    // TODO: 调用发布API
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
+    const data = {
+      title: articleForm.title,
+      summary: articleForm.summary,
+      content: articleForm.content,
+      coverImage: articleForm.coverImage,
+      categoryId: articleForm.categoryId,
+      tagIds: articleForm.tags,
+      isPublished: true
+    }
+
+    if (isEdit.value && articleId.value) {
+      // 更新并发布
+      await updateArticle(articleId.value, data)
+    } else {
+      // 创建并发布
+      await createArticle(data)
+    }
+
     ElMessage.success('发布成功')
     showPublishDialog.value = false
-    
+
     setTimeout(() => {
       router.push('/user/articles')
     }, 1000)
   } catch (error: any) {
+    console.error('发布失败:', error)
     ElMessage.error(error.message || '发布失败')
   } finally {
     publishing.value = false
@@ -560,10 +698,13 @@ const startAutoSave = () => {
 }
 
 // 组件挂载
-onMounted(() => {
+onMounted(async () => {
+  // 加载分类和标签
+  await Promise.all([loadCategories(), loadTags()])
+
   // 如果是编辑模式，加载文章数据
   if (isEdit.value) {
-    // TODO: 加载文章数据
+    await loadArticle()
   }
 
   // 启动自动保存

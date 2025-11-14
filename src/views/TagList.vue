@@ -247,13 +247,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import * as echarts from 'echarts'
+import { getTagList, searchTags } from '@/api/tag'
+import type { Tag } from '@/types'
 
 const router = useRouter()
 
 // 状态
+const loading = ref(false)
 const viewMode = ref<'cloud' | 'grid' | 'list'>('cloud')
 const sortBy = ref('hot')
 const searchKeyword = ref('')
@@ -261,47 +265,19 @@ const barChartRef = ref<HTMLElement | null>(null)
 const wordCloudRef = ref<HTMLElement | null>(null)
 
 // 标签数据
-const tags = ref([
-  { id: 1, name: 'JavaScript', color: '#F7DF1E', articleCount: 45 },
-  { id: 2, name: 'Vue.js', color: '#42B883', articleCount: 38 },
-  { id: 3, name: 'React', color: '#61DAFB', articleCount: 35 },
-  { id: 4, name: 'TypeScript', color: '#3178C6', articleCount: 32 },
-  { id: 5, name: 'Node.js', color: '#339933', articleCount: 28 },
-  { id: 6, name: 'Python', color: '#3776AB', articleCount: 25 },
-  { id: 7, name: 'CSS', color: '#1572B6', articleCount: 22 },
-  { id: 8, name: 'Docker', color: '#2496ED', articleCount: 20 },
-  { id: 9, name: 'Git', color: '#F05032', articleCount: 18 },
-  { id: 10, name: 'Webpack', color: '#8DD6F9', articleCount: 16 },
-  { id: 11, name: 'MySQL', color: '#4479A1', articleCount: 15 },
-  { id: 12, name: 'Redis', color: '#DC382D', articleCount: 14 },
-  { id: 13, name: 'MongoDB', color: '#47A248', articleCount: 13 },
-  { id: 14, name: 'Spring Boot', color: '#6DB33F', articleCount: 12 },
-  { id: 15, name: 'Nginx', color: '#009639', articleCount: 11 },
-  { id: 16, name: 'Linux', color: '#FCC624', articleCount: 10 },
-  { id: 17, name: 'AWS', color: '#FF9900', articleCount: 9 },
-  { id: 18, name: 'Kubernetes', color: '#326CE5', articleCount: 8 },
-  { id: 19, name: 'GraphQL', color: '#E10098', articleCount: 7 },
-  { id: 20, name: 'TailwindCSS', color: '#06B6D4', articleCount: 6 }
-])
+const tags = ref<Tag[]>([])
 
 // 计算属性
 const filteredTags = computed(() => {
-  let result = tags.value
-
-  // 搜索过滤
-  if (searchKeyword.value) {
-    result = result.filter(tag =>
-      tag.name.toLowerCase().includes(searchKeyword.value.toLowerCase())
-    )
-  }
+  const result = [...tags.value]
 
   // 排序
   switch (sortBy.value) {
     case 'hot':
     case 'count':
-      return [...result].sort((a, b) => b.articleCount - a.articleCount)
+      return result.sort((a, b) => b.articleCount - a.articleCount)
     case 'name':
-      return [...result].sort((a, b) => a.name.localeCompare(b.name))
+      return result.sort((a, b) => a.name.localeCompare(b.name))
     default:
       return result
   }
@@ -440,8 +416,49 @@ const initWordCloud = () => {
   })
 }
 
+// 加载标签列表
+const loadTags = async () => {
+  try {
+    loading.value = true
+    const response = await getTagList()
+    tags.value = response.data
+  } catch (error: any) {
+    ElMessage.error(error.message || '加载标签列表失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 搜索标签
+const handleSearch = async () => {
+  if (!searchKeyword.value.trim()) {
+    await loadTags()
+    return
+  }
+
+  try {
+    loading.value = true
+    const response = await searchTags(searchKeyword.value.trim())
+    tags.value = response.data
+  } catch (error: any) {
+    ElMessage.error(error.message || '搜索失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 监听搜索关键字变化
+watch(searchKeyword, (newValue) => {
+  if (!newValue) {
+    loadTags()
+  } else {
+    handleSearch()
+  }
+})
+
 // 组件挂载
-onMounted(() => {
+onMounted(async () => {
+  await loadTags()
   initBarChart()
   // 注意：词云需要额外安装 echarts-wordcloud 插件
   // npm install echarts-wordcloud

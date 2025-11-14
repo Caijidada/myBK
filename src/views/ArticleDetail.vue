@@ -297,6 +297,9 @@ import 'highlight.js/styles/github-dark.css'
 import dayjs from 'dayjs'
 import { ElMessage } from 'element-plus'
 import CommentItem from '@/components/common/CommentItem.vue'
+import { getArticleDetail, likeArticle, unlikeArticle, favoriteArticle, unfavoriteArticle } from '@/api/article'
+import { getCommentList, createComment, deleteComment, likeComment, unlikeComment } from '@/api/comment'
+import type { Article, Comment } from '@/types'
 
 const router = useRouter()
 const route = useRoute()
@@ -312,6 +315,7 @@ marked.setOptions({
 })
 
 // 状态
+const loading = ref(false)
 const contentRef = ref<HTMLElement | null>(null)
 const showBackTop = ref(false)
 const showToc = ref(false)
@@ -319,79 +323,33 @@ const tocExpanded = ref(true)
 const activeHeading = ref('')
 const tocItems = ref<Array<{ id: string; text: string; level: number }>>([])
 const commentContent = ref('')
-const comments = ref<any[]>([])
-const hasMoreComments = ref(true)
+const comments = ref<Comment[]>([])
+const hasMoreComments = ref(false)
 const isFollowing = ref(false)
+const currentPage = ref(1)
+const pageSize = ref(10)
 
 // 文章数据
-const article = ref({
-  id: 1,
-  title: '深入理解 Vue 3 Composition API',
-  summary: '全面解析 Vue 3 新一代组合式 API 的设计理念与实践应用',
-  content: `# Vue 3 Composition API 简介
-
-Vue 3 引入了全新的 Composition API，这是一种基于函数的 API，可以更灵活地组织组件逻辑。
-
-## 为什么需要 Composition API？
-
-在 Vue 2 中，我们使用 Options API 来组织组件代码。虽然这种方式简单易懂，但在大型组件中会遇到一些问题：
-
-### 1. 逻辑复用困难
-
-传统的 mixin 方式存在命名冲突、数据来源不清晰等问题。
-
-### 2. 代码组织困难
-
-相关的逻辑被拆分到不同的选项中，增加了维护难度。
-
-## Composition API 的优势
-
-\`\`\`javascript
-import { ref, computed, onMounted } from 'vue'
-
-export default {
-  setup() {
-    const count = ref(0)
-    const double = computed(() => count.value * 2)
-    
-    const increment = () => {
-      count.value++
-    }
-    
-    onMounted(() => {
-      console.log('组件已挂载')
-    })
-    
-    return {
-      count,
-      double,
-      increment
-    }
-  }
-}
-\`\`\`
-
-## 总结
-
-Composition API 为 Vue 3 带来了更好的代码组织方式和逻辑复用能力。`,
-  coverImage: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=1200&q=80',
-  authorId: 1,
-  authorName: '张三',
-  authorAvatar: 'https://i.pravatar.cc/150?img=1',
-  authorBio: '全栈开发工程师，热爱技术分享',
-  categoryId: 1,
-  categoryName: '前端开发',
-  tags: [
-    { id: 2, name: 'Vue.js' },
-    { id: 4, name: 'TypeScript' }
-  ],
-  viewCount: 1245,
-  likeCount: 87,
-  commentCount: 23,
-  readTime: 8,
+const article = ref<Article>({
+  id: 0,
+  title: '',
+  summary: '',
+  content: '',
+  coverImage: '',
+  authorId: 0,
+  authorName: '',
+  authorAvatar: '',
+  categoryId: 0,
+  categoryName: '',
+  tags: [],
+  viewCount: 0,
+  likeCount: 0,
+  commentCount: 0,
+  isPublished: true,
+  readTime: 0,
   isLiked: false,
   isCollected: false,
-  createdAt: '2024-11-05T10:00:00Z'
+  createdAt: ''
 })
 
 const relatedArticles = ref<any[]>([])
@@ -417,10 +375,50 @@ const formatDate = (date: string) => {
   return dayjs(date).format('YYYY-MM-DD HH:mm')
 }
 
+// 加载文章详情
+const loadArticle = async () => {
+  try {
+    loading.value = true
+    const articleId = Number(route.params.id)
+    const response = await getArticleDetail(articleId)
+    article.value = response.data
+
+    await nextTick()
+    generateToc()
+  } catch (error: any) {
+    ElMessage.error(error.message || '加载文章失败')
+    router.push('/')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 加载评论列表
+const loadComments = async (page = 1) => {
+  try {
+    const response = await getCommentList({
+      articleId: article.value.id,
+      page,
+      size: pageSize.value
+    })
+
+    if (page === 1) {
+      comments.value = response.data.records
+    } else {
+      comments.value.push(...response.data.records)
+    }
+
+    currentPage.value = page
+    hasMoreComments.value = page < response.data.pages
+  } catch (error: any) {
+    ElMessage.error(error.message || '加载评论失败')
+  }
+}
+
 // 生成目录
 const generateToc = () => {
   if (!contentRef.value) return
-  
+
   const headings = contentRef.value.querySelectorAll('h1, h2, h3, h4')
   tocItems.value = Array.from(headings).map((heading, index) => {
     const id = `heading-${index}`
@@ -436,7 +434,7 @@ const generateToc = () => {
 // 监听滚动
 const handleScroll = () => {
   showBackTop.value = window.scrollY > 300
-  
+
   // 高亮当前标题
   if (contentRef.value) {
     const headings = contentRef.value.querySelectorAll('h1, h2, h3, h4')
@@ -462,10 +460,22 @@ const handleLike = async () => {
     router.push('/login')
     return
   }
-  
-  article.value.isLiked = !article.value.isLiked
-  article.value.likeCount += article.value.isLiked ? 1 : -1
-  ElMessage.success(article.value.isLiked ? '点赞成功' : '取消点赞')
+
+  try {
+    if (article.value.isLiked) {
+      await unlikeArticle(article.value.id)
+      article.value.isLiked = false
+      article.value.likeCount--
+      ElMessage.success('取消点赞')
+    } else {
+      await likeArticle(article.value.id)
+      article.value.isLiked = true
+      article.value.likeCount++
+      ElMessage.success('点赞成功')
+    }
+  } catch (error: any) {
+    ElMessage.error(error.message || '操作失败')
+  }
 }
 
 // 收藏
@@ -475,16 +485,27 @@ const handleCollect = async () => {
     router.push('/login')
     return
   }
-  
-  article.value.isCollected = !article.value.isCollected
-  ElMessage.success(article.value.isCollected ? '收藏成功' : '取消收藏')
+
+  try {
+    if (article.value.isCollected) {
+      await unfavoriteArticle(article.value.id)
+      article.value.isCollected = false
+      ElMessage.success('取消收藏')
+    } else {
+      await favoriteArticle(article.value.id)
+      article.value.isCollected = true
+      ElMessage.success('收藏成功')
+    }
+  } catch (error: any) {
+    ElMessage.error(error.message || '操作失败')
+  }
 }
 
 // 分享
 const handleShare = (platform: string) => {
   const url = window.location.href
   const title = article.value.title
-  
+
   switch (platform) {
     case 'link':
       navigator.clipboard.writeText(url)
@@ -502,7 +523,7 @@ const handleFollow = async () => {
     router.push('/login')
     return
   }
-  
+
   isFollowing.value = !isFollowing.value
   ElMessage.success(isFollowing.value ? '关注成功' : '取消关注')
 }
@@ -510,42 +531,84 @@ const handleFollow = async () => {
 // 发表评论
 const submitComment = async () => {
   if (!commentContent.value.trim()) return
-  
-  // TODO: 调用API发表评论
-  ElMessage.success('评论发表成功')
-  commentContent.value = ''
+
+  try {
+    await createComment({
+      articleId: article.value.id,
+      content: commentContent.value.trim()
+    })
+
+    ElMessage.success('评论发表成功')
+    commentContent.value = ''
+
+    // 重新加载评论列表
+    await loadComments(1)
+
+    // 更新评论数
+    article.value.commentCount++
+  } catch (error: any) {
+    ElMessage.error(error.message || '评论发表失败')
+  }
 }
 
 // 回复评论
 const handleReply = (commentId: number) => {
   console.log('回复评论:', commentId)
+  // TODO: 实现回复功能
 }
 
 // 点赞评论
-const handleCommentLike = (commentId: number) => {
-  console.log('点赞评论:', commentId)
+const handleCommentLike = async (commentId: number) => {
+  if (!isLoggedIn.value) {
+    ElMessage.warning('请先登录')
+    router.push('/login')
+    return
+  }
+
+  try {
+    const comment = comments.value.find(c => c.id === commentId)
+    if (!comment) return
+
+    // Note: 需要在 Comment 类型中添加 isLiked 字段
+    await likeComment(commentId)
+    comment.likeCount++
+    ElMessage.success('点赞成功')
+  } catch (error: any) {
+    ElMessage.error(error.message || '操作失败')
+  }
 }
 
 // 删除评论
-const handleCommentDelete = (commentId: number) => {
-  console.log('删除评论:', commentId)
+const handleCommentDelete = async (commentId: number) => {
+  if (!isLoggedIn.value) {
+    ElMessage.warning('请先登录')
+    return
+  }
+
+  try {
+    await deleteComment(commentId)
+    ElMessage.success('删除成功')
+
+    // 重新加载评论列表
+    await loadComments(1)
+
+    // 更新评论数
+    article.value.commentCount--
+  } catch (error: any) {
+    ElMessage.error(error.message || '删除失败')
+  }
 }
 
 // 加载更多评论
 const loadMoreComments = () => {
-  // TODO: 加载更多评论
-  hasMoreComments.value = false
+  loadComments(currentPage.value + 1)
 }
 
 // 组件挂载
 onMounted(async () => {
-  // 加载文章详情
-  const articleId = route.params.id
-  // TODO: 调用API加载文章
-  
-  await nextTick()
-  generateToc()
-  
+  await loadArticle()
+  await loadComments(1)
+
   window.addEventListener('scroll', handleScroll)
 })
 

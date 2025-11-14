@@ -30,8 +30,3 @@ export const updateUserInfo = (data: Partial<User>) => {
 export const changePassword = (data: { oldPassword: string; newPassword: string }) => {
   return request.put<ApiResponse>('/user/password', data)
 }
-
-// 上传头像
-export const uploadAvatar = (formData: FormData) => {
-  return request.upload<ApiResponse<{ url: string }>>('/upload/avatar', formData)
-}

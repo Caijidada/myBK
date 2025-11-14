@@ -138,81 +138,20 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import * as echarts from 'echarts'
+import { getCategoryList } from '@/api/category'
+import type { Category } from '@/types'
 
 const router = useRouter()
 
 // 状态
+const loading = ref(false)
 const sortBy = ref('articleCount')
 const chartRef = ref<HTMLElement | null>(null)
 
 // 分类数据
-const categories = ref([
-  {
-    id: 1,
-    name: '前端开发',
-    description: 'HTML、CSS、JavaScript、Vue、React等前端技术分享',
-    icon: 'fab fa-html5',
-    articleCount: 45,
-    createTime: '2024-01-15'
-  },
-  {
-    id: 2,
-    name: '后端开发',
-    description: 'Java、Python、Node.js、数据库等后端技术',
-    icon: 'fas fa-server',
-    articleCount: 38,
-    createTime: '2024-01-20'
-  },
-  {
-    id: 3,
-    name: '移动开发',
-    description: 'iOS、Android、Flutter、React Native移动端开发',
-    icon: 'fas fa-mobile-alt',
-    articleCount: 28,
-    createTime: '2024-02-01'
-  },
-  {
-    id: 4,
-    name: '人工智能',
-    description: '机器学习、深度学习、NLP、计算机视觉',
-    icon: 'fas fa-brain',
-    articleCount: 32,
-    createTime: '2024-02-10'
-  },
-  {
-    id: 5,
-    name: '数据库',
-    description: 'MySQL、PostgreSQL、MongoDB、Redis等数据库技术',
-    icon: 'fas fa-database',
-    articleCount: 22,
-    createTime: '2024-02-15'
-  },
-  {
-    id: 6,
-    name: 'DevOps',
-    description: 'Docker、Kubernetes、CI/CD、云原生技术',
-    icon: 'fas fa-cogs',
-    articleCount: 25,
-    createTime: '2024-03-01'
-  },
-  {
-    id: 7,
-    name: '架构设计',
-    description: '系统架构、微服务、设计模式、性能优化',
-    icon: 'fas fa-sitemap',
-    articleCount: 18,
-    createTime: '2024-03-10'
-  },
-  {
-    id: 8,
-    name: '生活随笔',
-    description: '日常生活、读书笔记、旅行见闻、心情随笔',
-    icon: 'fas fa-book-open',
-    articleCount: 15,
-    createTime: '2024-03-15'
-  }
-])
+const categories = ref<Category[]>([])
 
 // 颜色方案
 const colorSchemes = [
@@ -229,14 +168,14 @@ const colorSchemes = [
 // 计算属性
 const sortedCategories = computed(() => {
   const sorted = [...categories.value]
-  
+
   switch (sortBy.value) {
     case 'articleCount':
       return sorted.sort((a, b) => b.articleCount - a.articleCount)
     case 'name':
       return sorted.sort((a, b) => a.name.localeCompare(b.name))
     case 'createTime':
-      return sorted.sort((a, b) => new Date(b.createTime).getTime() - new Date(a.createTime).getTime())
+      return sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     default:
       return sorted
   }
@@ -265,7 +204,7 @@ const getCategoryIconColor = (id: number) => {
 }
 // 跳转到分类
 const goToCategory = (id: number) => {
-  router.push(`/articles?category=${id}`)
+  router.push(`/articles?categoryId=${id}`)
 }
 
 // 初始化图表
@@ -320,8 +259,22 @@ const initChart = () => {
   })
 }
 
+// 加载分类列表
+const loadCategories = async () => {
+  try {
+    loading.value = true
+    const response = await getCategoryList()
+    categories.value = response.data
+  } catch (error: any) {
+    ElMessage.error(error.message || '加载分类列表失败')
+  } finally {
+    loading.value = false
+  }
+}
+
 // 组件挂载
-onMounted(() => {
+onMounted(async () => {
+  await loadCategories()
   initChart()
 })
 </script>

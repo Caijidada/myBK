@@ -142,9 +142,9 @@ const handleSubmit = async () => {
     loading.value = true
 
     try {
-      // TODO: 调用登录API
+      // 调用登录API
       await authStore.login({
-        username: loginForm.username,  
+        username: loginForm.username,
         password: loginForm.password,
         remember: loginForm.remember
       })

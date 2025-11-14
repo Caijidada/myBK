@@ -120,11 +120,11 @@
                 <!-- 标签 -->
                 <div class="flex flex-wrap gap-2 mb-3">
                   <span
-                    v-for="tag in article.tags.slice(0, 3)"
-                    :key="tag.id"
+                    v-for="tagName in article.tagNames?.slice(0, 3)"
+                    :key="tagName"
                     class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded"
                   >
-                    #{{ tag.name }}
+                    #{{ tagName }}
                   </span>
                 </div>
               </div>
@@ -214,10 +214,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import Pagination from '@/components/common/Pagination.vue'
+import { getMyArticles, publishArticle, unpublishArticle, deleteArticle } from '@/api/article'
 import dayjs from 'dayjs'
 
 const router = useRouter()
@@ -239,73 +240,62 @@ const filterStatus = ref('all')
 const currentPage = ref(1)
 const pageSize = ref(10)
 const totalCount = ref(0)
+const loading = ref(false)
 
 // 统计数据
 const stats = ref({
-  total: 23,
-  published: 18,
-  draft: 5
+  total: 0,
+  published: 0,
+  draft: 0
 })
 
 // 文章列表
-const articles = ref([
-  {
-    id: 1,
-    title: 'Vue 3 Composition API 实战指南',
-    summary: '全面解析 Vue 3 新一代组合式 API 的设计理念与实践应用',
-    coverImage: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&q=80',
-    tags: [{ id: 1, name: 'Vue' }, { id: 2, name: 'JavaScript' }],
-    isPublished: true,
-    viewCount: 1245,
-    likeCount: 87,
-    commentCount: 23,
-    createdAt: '2024-11-05T10:00:00Z'
-  },
-  {
-    id: 2,
-    title: 'TypeScript 高级技巧与实践',
-    summary: '深入理解 TypeScript 的类型系统和高级特性',
-    coverImage: 'https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=400&q=80',
-    tags: [{ id: 3, name: 'TypeScript' }],
-    isPublished: false,
-    viewCount: 0,
-    likeCount: 0,
-    commentCount: 0,
-    createdAt: '2024-11-03T10:00:00Z'
-  },
-  {
-    id: 3,
-    title: 'Docker 容器化部署完整指南',
-    summary: '从基础到实战，掌握 Docker 容器化技术',
-    coverImage: 'https://images.unsplash.com/photo-1605745341112-85968b19335b?w=400&q=80',
-    tags: [{ id: 4, name: 'Docker' }, { id: 5, name: 'DevOps' }],
-    isPublished: true,
-    viewCount: 987,
-    likeCount: 65,
-    commentCount: 18,
-    createdAt: '2024-11-01T10:00:00Z'
-  }
-])
+const articles = ref<any[]>([])
 
-// 过滤文章
+// 加载文章列表
+const loadArticles = async () => {
+  try {
+    loading.value = true
+    const params: any = {
+      page: currentPage.value,
+      size: pageSize.value
+    }
+
+    // 根据筛选状态传递参数
+    if (filterStatus.value !== 'all') {
+      params.status = filterStatus.value
+    }
+
+    const res = await getMyArticles(params)
+    articles.value = res.data.records || []
+    totalCount.value = res.data.total || 0
+
+    // 计算统计数据（从后端返回的总数据）
+    stats.value.total = res.data.total || 0
+    stats.value.published = articles.value.filter((a: any) => a.isPublished).length
+    stats.value.draft = articles.value.filter((a: any) => !a.isPublished).length
+
+  } catch (error: any) {
+    console.error('加载文章失败:', error)
+    ElMessage.error(error.message || '加载文章失败')
+    articles.value = []
+    totalCount.value = 0
+  } finally {
+    loading.value = false
+  }
+}
+
+// 过滤文章（仅用于关键词搜索）
 const filteredArticles = computed(() => {
   let result = articles.value
 
-  // 状态筛选
-  if (filterStatus.value === 'published') {
-    result = result.filter(a => a.isPublished)
-  } else if (filterStatus.value === 'draft') {
-    result = result.filter(a => !a.isPublished)
-  }
-
   // 关键词搜索
   if (searchKeyword.value) {
-    result = result.filter(a =>
+    result = result.filter((a: any) =>
       a.title.toLowerCase().includes(searchKeyword.value.toLowerCase())
     )
   }
 
-  totalCount.value = result.length
   return result
 })
 
@@ -327,15 +317,11 @@ const goToEditor = (id: number) => {
 // 发布文章
 const handlePublish = async (id: number) => {
   try {
-    // TODO: 调用发布API
-    const article = articles.value.find(a => a.id === id)
-    if (article) {
-      article.isPublished = true
-      stats.value.published++
-      stats.value.draft--
-    }
+    await publishArticle(id)
     ElMessage.success('发布成功')
+    await loadArticles() // 重新加载数据
   } catch (error: any) {
+    console.error('发布失败:', error)
     ElMessage.error(error.message || '发布失败')
   }
 }
@@ -343,15 +329,11 @@ const handlePublish = async (id: number) => {
 // 下架文章
 const handleUnpublish = async (id: number) => {
   try {
-    // TODO: 调用下架API
-    const article = articles.value.find(a => a.id === id)
-    if (article) {
-      article.isPublished = false
-      stats.value.published--
-      stats.value.draft++
-    }
+    await unpublishArticle(id)
     ElMessage.success('已下架')
+    await loadArticles() // 重新加载数据
   } catch (error: any) {
+    console.error('下架失败:', error)
     ElMessage.error(error.message || '下架失败')
   }
 }
@@ -359,20 +341,11 @@ const handleUnpublish = async (id: number) => {
 // 删除文章
 const handleDelete = async (id: number) => {
   try {
-    // TODO: 调用删除API
-    const index = articles.value.findIndex(a => a.id === id)
-    if (index > -1) {
-      const article = articles.value[index]
-      articles.value.splice(index, 1)
-      stats.value.total--
-      if (article.isPublished) {
-        stats.value.published--
-      } else {
-        stats.value.draft--
-      }
-    }
+    await deleteArticle(id)
     ElMessage.success('删除成功')
+    await loadArticles() // 重新加载数据
   } catch (error: any) {
+    console.error('删除失败:', error)
     ElMessage.error(error.message || '删除失败')
   }
 }
@@ -381,8 +354,19 @@ const handleDelete = async (id: number) => {
 const handlePageChange = (page: number, size: number) => {
   currentPage.value = page
   pageSize.value = size
-  // TODO: 重新加载数据
+  loadArticles()
 }
+
+// 监听筛选状态变化
+watch(filterStatus, () => {
+  currentPage.value = 1 // 重置页码
+  loadArticles()
+})
+
+// 组件挂载时加载数据
+onMounted(() => {
+  loadArticles()
+})
 </script>
 
 <style scoped>

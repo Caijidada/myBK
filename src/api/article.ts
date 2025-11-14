@@ -65,8 +65,3 @@ export const getMyArticles = (params: { page: number; size: number; status?: str
 export const getMyFavorites = (params: { page: number; size: number }) => {
   return request.get<ApiResponse<PageResponse<ArticleListItem>>>('/user/favorites', { params })
 }
-
-// 上传文章封面
-export const uploadCover = (formData: FormData) => {
-  return request.upload<ApiResponse<{ url: string }>>('/upload/cover', formData)
-}
