@@ -1,147 +1,143 @@
-现代化博客系统 - 后端
+# 🎨 博客系统 - 前端
 
-基于 Spring Boot 3 构建的高性能 RESTful API 服务，提供完整的博客内容管理、用户系统和社交互动功能。
+> 基于 Vue 3 + TypeScript 构建的现代化博客前端应用
 
-技术栈
-	•	框架: Spring Boot 3.1.5
-	•	数据库: MySQL 8.0
-	•	缓存: Redis 7.0
-	•	ORM: MyBatis Plus 3.5.7
-	•	安全: Spring Security + JWT
-	•	文档: SpringDoc OpenAPI 3
-	•	构建: Maven 3.8+
-	•	JDK: Java 17
+[![Vue](https://img.shields.io/badge/Vue-3.4-brightgreen.svg)](https://vuejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-5.0-646CFF.svg)](https://vitejs.dev/)
+[![Element Plus](https://img.shields.io/badge/Element%20Plus-latest-409EFF.svg)](https://element-plus.org/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-核心功能
+## 🚀 技术栈
 
-认证授权
-	•	JWT 双Token机制（Access Token + Refresh Token）
-	•	邮箱验证码注册/登录
-	•	OAuth2 社交登录（Google、GitHub）
-	•	基于角色的权限控制（RBAC）
+| 类别 | 技术 |
+|------|------|
+| 核心框架 | Vue 3.4 + TypeScript 5.0 |
+| 构建工具 | Vite 5.0 |
+| UI 组件 | Element Plus |
+| 路由管理 | Vue Router 4 |
+| 状态管理 | Pinia |
+| HTTP 客户端 | Axios |
+| 样式方案 | TailwindCSS |
 
-内容管理
-	•	文章 CRUD（Markdown 支持）
-	•	分类/标签管理
-	•	文章审核流程（管理员）
-	•	点赞/收藏功能
+## ✨ 核心功能
 
-用户系统
-	•	用户注册/登录
-	•	个人资料管理
-	•	关注/粉丝系统
-	•	邮件通知
+### 👤 用户系统
+- 邮箱验证码注册/登录
+- OAuth2 第三方登录（Google、GitHub）
+- JWT Token 认证（双Token机制）
+- 个人资料管理
 
-评论系统
-	•	多级评论（嵌套回复）
-	•	评论点赞
-	•	评论管理
+### 📄 内容展示
+- 文章列表（分页、筛选、搜索）
+- 文章详情（Markdown渲染）
+- 分类/标签导航
+- 响应式布局
 
-项目结构
+### 💡 交互功能
+- 文章点赞/收藏
+- 评论系统
+- 用户关注
 
-src/main/java/com/blog/
-├── config/          # 配置类（安全、Redis、CORS等）
-├── controller/      # REST 控制器
-├── dto/             # 数据传输对象
-│   ├── request/     # 请求 DTO
-│   └── response/    # 响应 DTO
-├── entity/          # 实体类
-├── mapper/          # MyBatis Mapper
-├── security/        # 安全相关（JWT、OAuth2）
-├── service/         # 业务逻辑层
-└── common/          # 公共类（响应、异常等）
+### 🔧 管理功能（管理员）
+- 文章审核
+- 分类/标签管理
+- 用户管理
 
-数据库设计
+## 📁 项目结构
+```
+src/
+├── api/           # API 接口定义
+├── assets/        # 静态资源
+├── components/    # 公共组件
+├── router/        # 路由配置
+├── stores/        # Pinia 状态管理
+├── utils/         # 工具函数
+├── views/         # 页面组件
+│   ├── admin/     # 管理员页面
+│   └── ...        # 其他页面
+└── App.vue        # 根组件
+```
 
-核心表：
-	•	tb_user - 用户表
-	•	tb_article - 文章表
-	•	tb_category - 分类表
-	•	tb_tag - 标签表
-	•	tb_comment - 评论表
-	•	tb_article_like - 文章点赞表
-	•	tb_article_favorite - 文章收藏表
-	•	tb_follow - 用户关注表
+## 🛠️ 快速开始
 
-快速开始
+### 1️⃣ 安装依赖
+```bash
+npm install
+```
 
-环境要求
-	•	JDK 17+
-	•	MySQL 8.0+
-	•	Redis 7.0+
-	•	Maven 3.8+
+### 2️⃣ 环境配置
 
-数据库初始化
+创建 `.env` 文件：
+```env
+VITE_API_BASE_URL=http://localhost:8080
+```
 
-mysql -u root -p < docker/mysql/init.sql
+### 3️⃣ 开发环境
+```bash
+npm run dev
+```
 
-配置文件
+访问 **http://localhost:3000**
 
-修改 application-dev.yml:
+### 4️⃣ 生产构建
+```bash
+npm run build
+```
 
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3307/blog
-    username: root
-    password: your-password
+## 🎯 技术亮点
 
-  redis:
-    host: localhost
-    port: 6379
+### 1. TypeScript 全面支持
+- ✅ 类型安全，提升开发体验
+- ✅ 更好的代码提示和重构能力
 
-  mail:
-    username: your-email@gmail.com
-    password: your-app-password
+### 2. 组合式 API
+- ⚡ 使用 Vue 3 Composition API
+- ⚡ 代码更简洁、逻辑更清晰
 
-启动项目
+### 3. 响应式设计
+- 📱 支持移动端、平板、桌面端
+- 📱 自适应布局，完美兼容各种设备
 
-# Maven 启动
-./mvnw spring-boot:run
+### 4. 性能优化
+- 🚀 路由懒加载
+- 🚀 组件按需引入
+- 🚀 Vite 极速构建
 
-# 或打包后运行
-./mvnw clean package
-java -jar target/blog-backend-1.0.0.jar
+### 5. 安全认证
+- 🛡️ JWT 双Token机制
+- 🛡️ Token 自动刷新
+- 🛡️ 路由权限守卫
 
-访问 http://localhost:8080/swagger-ui.html￼ 查看 API 文档
+## 🌐 浏览器支持
 
-技术亮点
+现代浏览器（Chrome、Firefox、Safari、Edge）
 
-安全设计
-	•	JWT 双Token防护，自动刷新机制
-	•	OAuth2 标准社交登录集成
-	•	邮箱验证码（Redis存储，5分钟过期）
+| [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/edge/edge_48x48.png" alt="Edge" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)<br/>Edge | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/firefox/firefox_48x48.png" alt="Firefox" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)<br/>Firefox | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png" alt="Chrome" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)<br/>Chrome | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/safari/safari_48x48.png" alt="Safari" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)<br/>Safari |
+| --------- | --------- | --------- | --------- |
+| last 2 versions | last 2 versions | last 2 versions | last 2 versions |
 
-性能优化
-	•	Redis 缓存热点数据
-	•	MyBatis Plus 分页插件
-	•	数据库索引优化
+## 📦 构建优化
 
-代码质量
-	•	统一响应封装
-	•	全局异常处理
-	•	参数校验（Bean Validation）
-	•	RESTful API 设计规范
+- Tree-shaking 自动移除未使用代码
+- 代码分割和懒加载
+- 生产环境代码压缩
+- CSS 模块化
 
-文档完善
-	•	OpenAPI 3.0 自动生成 API 文档
-	•	Swagger UI 在线调试
+## 🔗 相关链接
 
-部署友好
-	•	Docker 容器化支持
-	•	多环境配置（dev/prod）
-	•	健康检查接口
+- [后端仓库](链接地址)
+- [在线演示](演示地址)
+- [API 文档](文档地址)
 
-API 文档
+## 📄 License
 
-启动后访问: http://localhost:8080/swagger-ui.html￼
+[MIT](LICENSE)
 
-主要接口：
-	•	/api/auth/* - 认证相关
-	•	/api/articles/* - 文章管理
-	•	/api/users/* - 用户管理
-	•	/api/comments/* - 评论管理
-	•	/api/admin/* - 管理员功能
+## 👨‍💻 作者
 
-部署
+**CaiJi**
 
-详见 DEPLOY.md
+---
+
+⭐ 如果这个项目对你有帮助，请给个 Star！
