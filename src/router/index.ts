@@ -133,6 +133,12 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '文章管理', requiresAuth: true, requiresAdmin: true }
   },
   {
+    path: '/admin/article-review',
+    name: 'ArticleReview',
+    component: () => import('@/views/admin/ArticleReview.vue'),
+    meta: { title: '文章审核', requiresAuth: true, requiresAdmin: true }
+  },
+  {
     path: '/admin/comments',
     name: 'CommentManage',
     component: () => import('@/views/admin/CommentManage.vue'),

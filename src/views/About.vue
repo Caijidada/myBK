@@ -196,6 +196,14 @@
             <div class="font-medium mb-1">微信</div>
             <div class="text-sm opacity-90">your_wechat_id</div>
           </div>
+
+          <div class="text-center">
+            <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
+              <i class="fab fa-qq text-2xl"></i>
+            </div>
+            <div class="font-medium mb-1">QQ</div>
+            <div class="text-sm opacity-90">123456789</div>
+          </div>
         </div>
 
         <div class="text-center">

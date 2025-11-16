@@ -109,6 +109,7 @@
               >
               </el-input>
               <button
+                type="button"
                 @click="handleGetCaptcha"
                 :disabled="captchaCountdown > 0"
                 class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed whitespace-nowrap"

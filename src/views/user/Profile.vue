@@ -286,11 +286,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
+import { getUserInfo } from '@/api/user'
 
 const router = useRouter()
 const route = useRoute()
@@ -306,16 +307,16 @@ const tabs = [
 
 const isActive = (path: string) => route.path === path
 
-// 用户信息
-const userInfo = ref({
-  id: 1,
-  username: 'zhangsan',
-  email: 'zhangsan@example.com',
-  nickname: '张三',
-  avatar: 'https://i.pravatar.cc/200?img=12',
-  bio: '全栈开发工程师，热爱技术分享',
+// 用户信息 - 从authStore获取当前登录用户
+const userInfo = computed(() => authStore.user || {
+  id: 0,
+  username: '',
+  email: '',
+  nickname: '',
+  avatar: '',
+  bio: '',
   role: 'USER',
-  createdAt: '2024-01-15T10:00:00Z'
+  createdAt: ''
 })
 
 // 统计数据
